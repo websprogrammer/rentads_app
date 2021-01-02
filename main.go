@@ -16,11 +16,14 @@ import (
 )
 
 func init() {
-	path, _ := os.Getwd()
-	dir := strings.Replace(path, " ", "\\ ", -1)
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
 
 	file, err := os.OpenFile(
-		filepath.Join(dir, "/rentads_app_log.txt"),
+		filepath.Join(exPath, "/app_log.txt"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
 		0666)
 
