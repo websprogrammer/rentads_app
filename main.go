@@ -6,17 +6,28 @@ import (
 	"github.com/stretchr/stew/slice"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
+func init() {
+	file, err := os.OpenFile("rentads_app_log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.SetOutput(file)
+}
+
 func (db *DB) getAdverts(c echo.Context) error {
 	var query []bson.M
 
 	lastDate, err := strconv.ParseUint(
-		c.QueryParam("lastDate"),
+		c.QueryParam("last_date"),
 		10,
 		32)
 
@@ -41,12 +52,9 @@ func (db *DB) getAdverts(c echo.Context) error {
 
 	index := mgo.Index{
 		Key:  []string{"$text:Description"},
-		Name: "DescriptionText",
+		Name: "Description_text",
 	}
-	err = db.adverts.EnsureIndex(index)
-	if err != nil {
-		panic(err)
-	}
+	_ = db.adverts.EnsureIndex(index)
 
 	keyWords := c.QueryParam("key_words")
 	if keyWords != "" {
@@ -99,7 +107,12 @@ func (db *DB) getAdverts(c echo.Context) error {
 	var adverts []Advert
 	err = db.adverts.Pipe(pipeline).All(&adverts)
 	if err != nil {
-		return err
+		results := struct {
+			status string
+		}{
+			DbError,
+		}
+		return c.JSON(http.StatusInternalServerError, results)
 	}
 
 	var lastDateValue uint64
@@ -116,7 +129,7 @@ func (db *DB) getAdverts(c echo.Context) error {
 
 func (db *DB) sendFeedback(c echo.Context) error {
 	var results struct {
-		status  string
+		status string
 	}
 
 	city := c.QueryParam("city")
@@ -166,7 +179,7 @@ func (db *DB) sendFeedback(c echo.Context) error {
 
 func (db *DB) sendToken(c echo.Context) error {
 	var results struct {
-		status  string
+		status string
 	}
 
 	availableCities := []string{"nn", "msc", "spb"}
@@ -233,7 +246,9 @@ func (db *DB) sendToken(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, results)
 	}
 
-	results.status = fmt.Sprintf("Token %s.", key)
+	msg := fmt.Sprintf("Token %s.", key)
+	results.status = msg
+	log.Println(msg)
 	return c.JSON(http.StatusOK, results)
 }
 
@@ -256,6 +271,5 @@ func main() {
 	e.GET("/", db.getAdverts)
 	e.GET("/send_token", db.sendToken)
 	e.GET("/send_feedback", db.sendFeedback)
-	// TODO Change the port!
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":8080"))
 }
