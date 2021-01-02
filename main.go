@@ -271,5 +271,5 @@ func main() {
 	e.GET("/", db.getAdverts)
 	e.GET("/send_token", db.sendToken)
 	e.GET("/send_feedback", db.sendFeedback)
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":8000"))
 }
