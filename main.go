@@ -9,13 +9,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func init() {
-	file, err := os.OpenFile("rentads_app_log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	path, _ := os.Getwd()
+	dir := strings.Replace(path, " ", "\\ ", -1)
+
+	file, err := os.OpenFile(
+		filepath.Join(dir, "/rentads_app_log.txt"),
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
+		0666)
+
 	if err != nil {
 		log.Fatal(err)
 	}
