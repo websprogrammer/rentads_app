@@ -195,7 +195,7 @@ func (db *DB) sendToken(c echo.Context) error {
 
 	availableCities := []string{"nn", "msc", "spb"}
 	city := c.QueryParam("city")
-	if slice.Contains(availableCities, city) {
+	if !slice.Contains(availableCities, city) {
 		city = "nn"
 	}
 
