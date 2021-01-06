@@ -257,7 +257,7 @@ func (db *DB) sendToken(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, results)
 	}
 
-	msg := fmt.Sprintf("Token %s.", key)
+	msg := fmt.Sprintf("Token %s %s.", tokenId, key)
 	results.status = msg
 	log.Println(msg)
 	return c.JSON(http.StatusOK, results)
