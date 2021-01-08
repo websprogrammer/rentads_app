@@ -1,3 +1,12 @@
+/*
+The package implements the backend logic of Arendator application.
+
+It requires the following parts:
+- server logging
+- getting adverts with requested params
+- sending user feedback to server
+- sending token with necessary application params
+*/
 package main
 
 import (
@@ -16,14 +25,16 @@ import (
 )
 
 func init() {
+	// Set logging for the server
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
 
+	// Open or create the log file with required permissions
 	file, err := os.OpenFile(
-		filepath.Join(exPath, "/app_log.txt"),
+		filepath.Join(exPath, "/application.log"),
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY,
 		0666)
 
@@ -31,9 +42,11 @@ func init() {
 		log.Fatal(err)
 	}
 
+	// Set the output destination for the standard logger
 	log.SetOutput(file)
 }
 
+// Get adverts with requested params from database
 func (db *DB) getAdverts(c echo.Context) error {
 	var query []bson.M
 
@@ -80,9 +93,7 @@ func (db *DB) getAdverts(c echo.Context) error {
 
 	availableTypes := []int{1, 2}
 
-	rentType, err := strconv.Atoi(
-		c.QueryParam("rent_type"))
-
+	rentType, err := strconv.Atoi(c.QueryParam("rent_type"))
 	if err == nil && slice.Contains(availableTypes, rentType) {
 		query = append(query, bson.M{"RentType": rentType})
 	}
@@ -123,6 +134,7 @@ func (db *DB) getAdverts(c echo.Context) error {
 		}{
 			DbError,
 		}
+		log.Println(DbError)
 		return c.JSON(http.StatusInternalServerError, results)
 	}
 
@@ -138,6 +150,7 @@ func (db *DB) getAdverts(c echo.Context) error {
 	return c.JSON(http.StatusOK, results)
 }
 
+// Send user feedback to server
 func (db *DB) sendFeedback(c echo.Context) error {
 	var results struct {
 		status string
@@ -180,6 +193,8 @@ func (db *DB) sendFeedback(c echo.Context) error {
 
 	err = db.feedbacks.Insert(feedback)
 	if err != nil {
+		log.Println(DbError)
+
 		results.status = DbError
 		return c.JSON(http.StatusInternalServerError, results)
 	}
@@ -188,6 +203,7 @@ func (db *DB) sendFeedback(c echo.Context) error {
 	return c.JSON(http.StatusOK, results)
 }
 
+// Send token with necessary application params
 func (db *DB) sendToken(c echo.Context) error {
 	var results struct {
 		status string
@@ -209,6 +225,8 @@ func (db *DB) sendToken(c echo.Context) error {
 		32,
 	)
 	if err != nil {
+		log.Println(wrongRentType)
+
 		results.status = wrongRentType
 		return c.JSON(http.StatusInternalServerError, results)
 	}
@@ -219,6 +237,8 @@ func (db *DB) sendToken(c echo.Context) error {
 		32,
 	)
 	if err != nil {
+		log.Println(wrongRoomType)
+
 		results.status = wrongRoomType
 		return c.JSON(http.StatusInternalServerError, results)
 	}
@@ -229,6 +249,8 @@ func (db *DB) sendToken(c echo.Context) error {
 		32,
 	)
 	if err != nil {
+		log.Println(wrongNotificationType)
+
 		results.status = wrongNotificationType
 		return c.JSON(http.StatusInternalServerError, results)
 	}
@@ -253,6 +275,8 @@ func (db *DB) sendToken(c echo.Context) error {
 	}
 
 	if err != nil {
+		log.Println(DbError)
+
 		results.status = DbError
 		return c.JSON(http.StatusInternalServerError, results)
 	}
@@ -264,6 +288,7 @@ func (db *DB) sendToken(c echo.Context) error {
 }
 
 func main() {
+	// Database initialization
 	session, err := mgo.Dial(mongoURI)
 	if err != nil {
 		panic(err)
@@ -278,9 +303,14 @@ func main() {
 
 	defer session.Close()
 
+	// Create Echo instance
 	e := echo.New()
+
+	// Routes
 	e.GET("/", db.getAdverts)
 	e.GET("/send_token", db.sendToken)
 	e.GET("/send_feedback", db.sendFeedback)
+
+	// Start server
 	e.Logger.Fatal(e.Start(":8000"))
 }
