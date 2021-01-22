@@ -15,6 +15,8 @@ type Advert struct {
 	ProfileName string        `bson:"ProfileName"`
 	City        string        `bson:"City"`
 	District    string        `bson:"District"`
+	SubDistrict string        `bson:"SubDistrict"`
+	Metro       string        `bson:"Metro"`
 	RentType    uint          `bson:"RentType"`
 	RoomType    uint          `bson:"RoomType"`
 }

@@ -116,6 +116,28 @@ func (db *DB) getAdverts(c echo.Context) error {
 			})
 	}
 
+	subDistrict := c.QueryParam("sub_district")
+	if subDistrict != "" {
+		query = append(
+			query,
+			bson.M{
+				"SubDistrict": bson.M{
+					"$in": strings.Split(subDistrict, "|"),
+				},
+			})
+	}
+
+	metro := c.QueryParam("metro")
+	if metro != "" {
+		query = append(
+			query,
+			bson.M{
+				"Metro": bson.M{
+					"$in": strings.Split(metro, "|"),
+				},
+			})
+	}
+
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
@@ -125,6 +147,9 @@ func (db *DB) getAdverts(c echo.Context) error {
 		{"$sort": bson.M{"Date": -1}},
 		{"$limit": 20},
 	}
+
+	fmt.Println(pipeline)
+
 
 	var adverts []Advert
 	err = db.adverts.Pipe(pipeline).All(&adverts)
