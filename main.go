@@ -175,6 +175,26 @@ func (db *DB) getAdverts(c echo.Context) error {
 	return c.JSON(http.StatusOK, results)
 }
 
+// Get Feedbacks
+func (db *DB) getFeedbacks(c echo.Context) error  {
+
+	pipeline := []bson.M{}
+
+	var feedbacks []Feedback
+	err:= db.feedbacks.Pipe(pipeline).All(&feedbacks)
+	if err != nil {
+		results := struct {
+			status string
+		}{
+			DbError,
+		}
+		log.Println(DbError)
+		return c.JSON(http.StatusInternalServerError, results)
+	}
+
+	return c.JSON(http.StatusOK, feedbacks)
+}
+
 // Send user feedback to server
 func (db *DB) sendFeedback(c echo.Context) error {
 	var results struct {
@@ -335,6 +355,7 @@ func main() {
 	e.GET("/", db.getAdverts)
 	e.GET("/send_token", db.sendToken)
 	e.GET("/send_feedback", db.sendFeedback)
+	e.GET("/feedbacks", db.getFeedbacks)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8000"))
