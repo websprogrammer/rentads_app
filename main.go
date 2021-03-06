@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/stew/slice"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,17 +24,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"html/template"
-	"io"
 )
 
 func init() {
 	// Set logging for the server
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
+	exPath := getExecPath()
 
 	// Open or create the log file with required permissions
 	file, err := os.OpenFile(
@@ -152,7 +148,6 @@ func (db *DB) getAdverts(c echo.Context) error {
 
 	fmt.Println(pipeline)
 
-
 	var adverts []Advert
 	err = db.adverts.Pipe(pipeline).All(&adverts)
 	if err != nil {
@@ -178,10 +173,10 @@ func (db *DB) getAdverts(c echo.Context) error {
 }
 
 // Get feedbacks from Database
-func (db *DB) getFeedbacks(c echo.Context) error  {
+func (db *DB) getFeedbacks(c echo.Context) error {
 	var feedbacks []Feedback
 
-	err:= db.feedbacks.Find(nil).All(&feedbacks)
+	err := db.feedbacks.Find(nil).All(&feedbacks)
 	if err != nil {
 		results := struct {
 			status string
@@ -192,39 +187,39 @@ func (db *DB) getFeedbacks(c echo.Context) error  {
 		return c.JSON(http.StatusInternalServerError, results)
 	}
 
-    return c.Render(http.StatusOK, "index.html", feedbacks)
+	return c.Render(http.StatusOK, "index.html", feedbacks)
 }
 
 // Remove feedbacks and ads from Database
-func (db *DB) deleteFeedback(c echo.Context) error  {
-    post_id := c.FormValue("post_id")
-    feedback_id := c.FormValue("feedback_id")
-    item := c.FormValue("item")
-    var message string
-    if item == "ad" {
-        message = "Ad and feedback removed"
-        id, _ := strconv.Atoi(post_id)
-        err_1 := db.adverts.Remove(bson.M{"PostId": id})
-        err_2 := db.feedbacks.Remove(bson.M{"PostId": id})
-        if err_1 != nil || err_2 != nil {
-            log.Println(err_1)
-            log.Println(err_2)
-            os.Exit(1)
-        }
-    } else if item == "feedback" {
-        message = "Feedback removed"
-        feedback_id = strings.Replace(feedback_id, "ObjectIdHex(\"", "", 1)
-        feedback_id = strings.Replace(feedback_id, "\")", "", 1)
-        err:= db.feedbacks.Remove(bson.M{"_id": bson.ObjectIdHex(feedback_id)})
-            if err != nil {
-            log.Println(err)
-            os.Exit(1)
-        }
-    } else {
-        return c.JSON(http.StatusInternalServerError, "Wrong type")
-    }
+func (db *DB) deleteFeedback(c echo.Context) error {
+	postId := c.FormValue("post_id")
+	feedbackId := c.FormValue("feedback_id")
+	item := c.FormValue("item")
+	var message string
+	if item == "ad" {
+		message = "Ad and feedback removed"
+		id, _ := strconv.Atoi(postId)
+		err1 := db.adverts.Remove(bson.M{"PostId": id})
+		err2 := db.feedbacks.Remove(bson.M{"PostId": id})
+		if err1 != nil || err2 != nil {
+			log.Println(err1)
+			log.Println(err2)
+			os.Exit(1)
+		}
+	} else if item == "feedback" {
+		message = "Feedback removed"
+		feedbackId = strings.Replace(feedbackId, "ObjectIdHex(\"", "", 1)
+		feedbackId = strings.Replace(feedbackId, "\")", "", 1)
+		err := db.feedbacks.Remove(bson.M{"_id": bson.ObjectIdHex(feedbackId)})
+		if err != nil {
+			log.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		return c.JSON(http.StatusInternalServerError, "Wrong type")
+	}
 
-    return c.Render(http.StatusOK, "removed.html" , message)
+	return c.Render(http.StatusOK, "removed.html", message)
 }
 
 // Send user feedback to server
@@ -365,11 +360,20 @@ func (db *DB) sendToken(c echo.Context) error {
 }
 
 type Template struct {
-    templates *template.Template
+	templates *template.Template
 }
 
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-    return t.templates.ExecuteTemplate(w, name, data)
+func (t *Template) Render(w io.Writer, name string, data interface{}, _ echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
+func getExecPath() string {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	return exPath
 }
 
 func main() {
@@ -388,13 +392,16 @@ func main() {
 
 	defer session.Close()
 
-    t := &Template{
-        templates: template.Must(template.ParseGlob("templates/*.html")),
-    }
+	exPath := getExecPath()
+	templatePattern := filepath.Join(exPath, "templates/*.html")
+
+	t := &Template{
+		templates: template.Must(template.ParseGlob(templatePattern)),
+	}
 
 	// Create Echo instance
 	e := echo.New()
-    e.Renderer = t
+	e.Renderer = t
 	// Routes
 	e.GET("/", db.getAdverts)
 	e.GET("/send_token", db.sendToken)
