@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <style>
+   body {
+   margin-left:10px!important;
+   font-family: Segoe, sans-serif;
+   }
+   li {
+      margin-top: 15px;
+   }
+  </style>
+
+  <meta charset="utf-8">
+  <title>Feedbacks</title>
+ </head>
+ <body>
+  <h1>Feedbacks</h1>
+  <ul>
+  {{range .}}
+   <li>
+    {{ if eq .City "nn" }}
+    NN<br/>
+    <a href="https://vk.com/dommoy?w=wall-42212756_{{ .PostId }}" target="_blank">{{ .PostId }}</a> (dommoy)
+    <br/>
+    <a href="https://vk.com/gipernn?w=wall-60501159_{{ .PostId }}" target="_blank">{{ .PostId }}</a> (gipernn)
+    <br/>
+    {{ end }}
+    {{ if eq .City "msc" }}
+    MSC<br/>
+    <a href="https://vk.com/arendakvartir_ru?w=wall-13185834_{{ .PostId }}" target="_blank">{{ .PostId }}</a>
+    <br/>
+    {{ end }}
+    {{ if eq .City "spb" }}
+    SPB<br/>
+    <a href="https://vk.com/vpiterezhiti?w=wall-150498843_{{ .PostId }}" target="_blank">{{ .PostId }}</a>
+    <br/>
+    {{ end }}
+    <span>Type: </span>
+    {{ if eq .Type 1 }}
+    Agent
+    {{ end }}
+    {{ if eq .Type 2 }}
+    Spam
+    {{ end }}
+    {{ if eq .Type 3 }}
+    Wrong district
+    {{ end }}
+    {{ if eq .Type 4 }}
+    Other
+    {{ end }}
+    <span><br/>{{ .Message }}<br/></span>
+
+    <form action="/delete_ad" method="post" enctype="application/x-www-form-urlencoded">
+     <input name="item" value="feedback" hidden/>
+     <input name="feedback_id" value="{{ .ID }}" hidden/>
+     <button>Delete feedback</button>
+    </form>
+
+    <form action="/delete_ad" method="post">
+     <input name="item" value="ad" hidden/>
+     <input name="post_id" value="{{ .PostId }}" hidden/>
+     <button>Delete ad</button>
+    </form>
+
+    <br/>
+   </li>
+  {{end}}
+  </ul>
+ </body>
+</html>
