@@ -136,6 +136,15 @@ func (db *DB) getAdverts(c echo.Context) error {
 			})
 	}
 
+	postId, err := strconv.ParseUint(
+		c.QueryParam("post_id"),
+		10,
+		32)
+
+	if err == nil && postId != 0 {
+		query = append(query, bson.M{"PostId": postId})
+	}
+
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
@@ -200,20 +209,18 @@ func (db *DB) deleteFeedback(c echo.Context) error {
 		message = "Ad and feedback removed"
 		id, _ := strconv.Atoi(postId)
 		err1 := db.adverts.Remove(bson.M{"PostId": id})
-		err2 := db.feedbacks.Remove(bson.M{"PostId": id})
+		_, err2 := db.feedbacks.RemoveAll(bson.M{"PostId": id})
 		if err1 != nil || err2 != nil {
 			log.Println(err1)
 			log.Println(err2)
-			os.Exit(1)
+			return c.JSON(http.StatusInternalServerError, "Failed removing")
 		}
 	} else if item == "feedback" {
 		message = "Feedback removed"
-		feedbackId = strings.Replace(feedbackId, "ObjectIdHex(\"", "", 1)
-		feedbackId = strings.Replace(feedbackId, "\")", "", 1)
 		err := db.feedbacks.Remove(bson.M{"_id": bson.ObjectIdHex(feedbackId)})
 		if err != nil {
 			log.Println(err)
-			os.Exit(1)
+			return c.JSON(http.StatusInternalServerError, "Failed feedback removing")
 		}
 	} else {
 		return c.JSON(http.StatusInternalServerError, "Wrong type")

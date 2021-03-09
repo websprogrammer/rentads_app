@@ -49,11 +49,12 @@
     {{ if eq .Type 4 }}
     Other
     {{ end }}
+    <br/><a href="/?&city={{ .City }}&post_id={{ .PostId }}">Ad</a>
     <span><br/>{{ .Message }}<br/></span>
 
     <form action="/delete_ad" method="post" enctype="application/x-www-form-urlencoded">
      <input name="item" value="feedback" hidden/>
-     <input name="feedback_id" value="{{ .ID }}" hidden/>
+     <input name="feedback_id" value="{{ .ID.Hex }}" hidden/>
      <button>Delete feedback</button>
     </form>
 
