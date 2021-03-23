@@ -19,7 +19,7 @@ type Advert struct {
 	Metro       string        `bson:"Metro"`
 	RentType    uint          `bson:"RentType"`
 	RoomType    uint          `bson:"RoomType"`
-	Price      uint64         `bson:"PostId"`
+	Price      uint64         `bson:"Price"`
 }
 
 type DB struct {
