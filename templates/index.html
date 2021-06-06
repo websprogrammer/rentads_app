@@ -36,6 +36,11 @@
     <a href="https://vk.com/vpiterezhiti?w=wall-150498843_{{ .PostId }}" target="_blank">{{ .PostId }}</a>
     <br/>
     {{ end }}
+    {{ if eq .City "soc" }}
+    SOC<br/>
+    <a href="https://vk.com/apartments_sochi?w=wall-85122623_{{ .PostId }}" target="_blank">{{ .PostId }}</a>
+    <br/>
+    {{ end }}
     <span>Type: </span>
     {{ if eq .Type 1 }}
     Agent

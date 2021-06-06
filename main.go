@@ -64,7 +64,7 @@ func (db *DB) getAdverts(c echo.Context) error {
 		)
 	}
 
-	availableCities := []string{"nn", "msc", "spb"}
+	availableCities := []string{"nn", "msc", "spb", "soc"}
 	city := c.QueryParam("city")
 	cityMap := bson.M{"City": "nn"}
 	if slice.Contains(availableCities, city) {
@@ -288,7 +288,7 @@ func (db *DB) sendToken(c echo.Context) error {
 		status string
 	}
 
-	availableCities := []string{"nn", "msc", "spb"}
+	availableCities := []string{"nn", "msc", "spb", "soc"}
 	city := c.QueryParam("city")
 	if !slice.Contains(availableCities, city) {
 		city = "nn"
