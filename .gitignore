@@ -11,8 +11,13 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Environments
+.env
+.venv
+
 .DS_Store
-rentads_app_log.txt
+rentads_app.log
 
 # Compiled file
 rentads_app
+
