@@ -40,7 +40,7 @@ func main() {
 
 	dbConfig, err := database.LoadConfig(".env")
 	if err != nil {
-		slog.Info("Error loading config", slog.String("error=", err.Error()))
+		slog.Error("Error loading config", slog.String("error=", err.Error()))
 	}
 	dbConfig.MaxConns = 10
 	dbConfig.MinConns = 2                        // Minimum connections in the pool, default is 0
@@ -62,6 +62,7 @@ func main() {
 
 	app := fiber.New()
 	app.Get("/", handlers.GetAdverts(dbClient))
+	app.Post("/add_notification", handlers.AddNotification(dbClient))
 	log.Fatal(app.Listen(":3000"))
 
 }

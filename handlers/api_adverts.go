@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/stew/slice"
+	"rentads_app/config"
 	"rentads_app/database"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ func GetAdverts(db *database.DB) fiber.Handler {
 			32,
 		)
 
-		availableCities := []string{"nn", "msc", "spb", "soc", "crm", "kzn"}
+		availableCities := config.GetSupportedCities()
 		city := c.Query("city")
 		if !slice.Contains(availableCities, city) {
 			city = "nn"

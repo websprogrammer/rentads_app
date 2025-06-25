@@ -4,11 +4,10 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
+	"rentads_app/config"
 	"rentads_app/database/sql"
 	"rentads_app/schemas"
 )
-
-var PageSize int8 = 20
 
 func (db *DB) GetAdvertsFromDB(
 	ctx context.Context,
@@ -33,7 +32,7 @@ func (db *DB) GetAdvertsFromDB(
 		query,
 		pgx.NamedArgs{
 			"older_than":     olderThan,
-			"page_size":      PageSize,
+			"page_size":      config.AdvertsPageSize,
 			"city":           city,
 			"rent_type":      rentType,
 			"room_type":      roomType,
@@ -48,4 +47,35 @@ func (db *DB) GetAdvertsFromDB(
 		return nil, err
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByName[schemas.Advert])
+}
+
+func (db *DB) UpsertNotificationToDB(
+	ctx context.Context,
+	notification *schemas.Notification,
+) error {
+	conn, err := db.Client.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query, err := sql.GetSQLFromFile("add_notification.sql")
+	_, err = conn.Query(
+		ctx,
+		query,
+		pgx.NamedArgs{
+			"device_token": notification.DeviceToken,
+			"city":         notification.City,
+			"rent_type":    notification.RentType,
+			"room_type":    notification.RoomType,
+			"districts":    notification.Districts,
+			"key_words":    notification.KeyWords,
+			"enabled":      notification.Enabled,
+		},
+	)
+	if err != nil {
+		slog.Error("Failed to upsert notification to DB", err)
+		return err
+	}
+	return nil
 }

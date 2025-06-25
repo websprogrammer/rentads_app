@@ -13,7 +13,7 @@ type Advert struct {
 	Metro       *string `bson:"Metro"`
 	RentType    uint    `bson:"RentType"`
 	RoomType    uint    `bson:"RoomType"`
-	Price       *string `bson:"Price"`
+	Price       int64   `bson:"Price"`
 }
 
 type Photo struct {
