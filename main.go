@@ -63,6 +63,7 @@ func main() {
 	app := fiber.New()
 	app.Get("/", handlers.GetAdverts(dbClient))
 	app.Post("/add_notification", handlers.AddNotification(dbClient))
+	app.Post("/send_feedback", handlers.SendFeedback(dbClient))
 	log.Fatal(app.Listen(":3000"))
 
 }

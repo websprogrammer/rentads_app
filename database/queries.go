@@ -9,6 +9,34 @@ import (
 	"rentads_app/schemas"
 )
 
+func (db *DB) AddFeedbackToDB(
+	ctx context.Context,
+	feedback *schemas.Feedback,
+) error {
+	conn, err := db.Client.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query, err := sql.GetSQLFromFile("add_feedback.sql")
+	_, err = conn.Query(
+		ctx,
+		query,
+		pgx.NamedArgs{
+			"city":          feedback.City,
+			"post_id":       feedback.PostId,
+			"feedback_type": feedback.Type,
+			"message":       feedback.Message,
+		},
+	)
+	if err != nil {
+		slog.Error("Failed to add feedback to DB", err)
+		return err
+	}
+	return nil
+}
+
 func (db *DB) GetAdvertsFromDB(
 	ctx context.Context,
 	olderThan uint64,
