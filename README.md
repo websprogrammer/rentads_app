@@ -1,2 +1,2 @@
 # rentads_app
-Backend server for Arendator application
+API for Arendator application

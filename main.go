@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/template/html/v3"
 	"log"
 	"log/slog"
 	"os"
@@ -60,10 +61,25 @@ func main() {
 	}
 	dbClient.MonitorPoolStats()
 
-	app := fiber.New()
+	// Create a new HTML template engine using the embedded filesystem
+	engine := html.New("./views", ".html")
+
+	// Optional: Reload templates on each render for development (set to false in production)
+	engine.Reload(true)
+	// Optional: Enable debugging to print parsed templates
+	engine.Debug(true)
+	// Optional: Define the variable name used to yield templates within layouts
+	engine.Layout("embed")
+
+	app := fiber.New(fiber.Config{
+		// Pass in Views Template Engine
+		Views: engine,
+	})
 	app.Get("/", handlers.GetAdverts(dbClient))
 	app.Post("/add_notification", handlers.AddNotification(dbClient))
+	app.Get("/get_feedbacks", handlers.GetFeedbacks(dbClient))
+
+	app.Get("/delete_feedback", handlers.DeleteFeedback(dbClient))
 	app.Post("/send_feedback", handlers.SendFeedback(dbClient))
 	log.Fatal(app.Listen(":3000"))
-
 }

@@ -37,6 +37,59 @@ func (db *DB) AddFeedbackToDB(
 	return nil
 }
 
+func (db *DB) DeleteFeedbackFromDB(
+	ctx context.Context,
+	id uint64,
+) error {
+	conn, err := db.Client.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query, err := sql.GetSQLFromFile("delete_feedback.sql")
+	_, err = conn.Query(
+		ctx,
+		query,
+		pgx.NamedArgs{
+			"id": id,
+		},
+	)
+	if err != nil {
+		slog.Error("Failed to delete feedback from DB", err)
+		return err
+	}
+	return nil
+}
+
+func (db *DB) GetFeedbacksFromDB(
+	ctx context.Context,
+	id uint64,
+	city string,
+) ([]schemas.FeedbackResponse, error) {
+	conn, err := db.Client.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	query, err := sql.GetSQLFromFile("get_feedbacks.sql")
+	rows, err := conn.Query(
+		ctx,
+		query,
+		pgx.NamedArgs{
+			"id":        id,
+			"page_size": config.AdvertsPageSize,
+			"city":      city,
+		},
+	)
+	if err != nil {
+		slog.Error("Failed to get feedbacks from DB", err)
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByName[schemas.FeedbackResponse])
+}
+
 func (db *DB) GetAdvertsFromDB(
 	ctx context.Context,
 	olderThan uint64,
